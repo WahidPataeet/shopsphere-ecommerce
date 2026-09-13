@@ -1,0 +1,33 @@
+CREATE TABLE category (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(500),
+    parent_id BIGINT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_category PRIMARY KEY (id),
+
+    CONSTRAINT uk_category_name_parent
+        UNIQUE (name, parent_id),
+
+    CONSTRAINT fk_category_parent
+        FOREIGN KEY (parent_id)
+        REFERENCES category(id)
+);
+
+CREATE TABLE brand (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(500),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_brand PRIMARY KEY (id),
+
+    CONSTRAINT uk_brand_name
+        UNIQUE (name)
+);
+
