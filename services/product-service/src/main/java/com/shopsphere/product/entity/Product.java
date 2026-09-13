@@ -1,28 +1,31 @@
 package com.shopsphere.product.entity;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "category")
-public class Category {
+@Table(name = "product")
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(nullable = false, length = 200)
     private String name;
 
-    @Column(name = "description", length = 500)
+    @Column(length = 1000)
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Category parent;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
-    @Column(name = "status", nullable = false, length = 20)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "brand_id", nullable = false)
+    private Brand brand;
+
+    @Column(nullable = false, length = 20)
     private String status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -68,12 +71,20 @@ public class Category {
         this.description = description;
     }
 
-    public Category getParent() {
-        return parent;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setParent(Category parent) {
-        this.parent = parent;
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public Brand getBrand() {
+        return brand;
+    }
+
+    public void setBrand(Brand brand) {
+        this.brand = brand;
     }
 
     public String getStatus() {

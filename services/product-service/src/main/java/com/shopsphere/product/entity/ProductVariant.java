@@ -2,27 +2,31 @@ package com.shopsphere.product.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "category")
-public class Category {
+@Table(name = "product_variant")
+public class ProductVariant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
-    @Column(name = "description", length = 500)
-    private String description;
+    @Column(nullable = false, unique = true, length = 100)
+    private String sku;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Category parent;
+    @Column(name = "original_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal originalPrice;
 
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "selling_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal sellingPrice;
+
+    @Column(nullable = false, length = 20)
     private String status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -52,28 +56,36 @@ public class Category {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
-    public String getDescription() {
-        return description;
+    public String getSku() {
+        return sku;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSku(String sku) {
+        this.sku = sku;
     }
 
-    public Category getParent() {
-        return parent;
+    public BigDecimal getOriginalPrice() {
+        return originalPrice;
     }
 
-    public void setParent(Category parent) {
-        this.parent = parent;
+    public void setOriginalPrice(BigDecimal originalPrice) {
+        this.originalPrice = originalPrice;
+    }
+
+    public BigDecimal getSellingPrice() {
+        return sellingPrice;
+    }
+
+    public void setSellingPrice(BigDecimal sellingPrice) {
+        this.sellingPrice = sellingPrice;
     }
 
     public String getStatus() {
