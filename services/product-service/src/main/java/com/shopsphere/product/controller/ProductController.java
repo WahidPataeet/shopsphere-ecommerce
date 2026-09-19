@@ -2,6 +2,7 @@ package com.shopsphere.product.controller;
 
 import com.shopsphere.product.dto.request.CreateProductRequest;
 import com.shopsphere.product.dto.request.UpdateProductRequest;
+import com.shopsphere.product.dto.response.PageResponse;
 import com.shopsphere.product.dto.response.ProductResponse;
 import com.shopsphere.product.service.ProductService;
 import jakarta.validation.Valid;
@@ -43,10 +44,38 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+    public ResponseEntity<PageResponse<ProductResponse>> getAllProducts(
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "10") int size,
+
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+
+            @RequestParam(defaultValue = "desc") String sortDir,
+
+            @RequestParam(required = false) String name,
+
+            @RequestParam(required = false) String status,
+
+            @RequestParam(required = false) Long categoryId,
+
+            @RequestParam(required = false) Long brandId
+    ) {
+
+        PageResponse<ProductResponse> allProducts = productService.getAllProducts(
+                page,
+                size,
+                sortBy,
+                sortDir,
+                name,
+                status,
+                categoryId,
+                brandId
+        );
 
         return ResponseEntity.ok(
-                productService.getAllProducts()
+                allProducts
         );
     }
 
