@@ -8,6 +8,7 @@ public class ErrorResponse {
     private String error;
     private String message;
     private String path;
+    private int value;
 
     public ErrorResponse() {
     }
@@ -18,6 +19,11 @@ public class ErrorResponse {
         this.error = error;
         this.message = message;
         this.path = path;
+    }
+
+    public ErrorResponse(int value, String message) {
+        this.value = value;
+        this.message = message;
     }
 
     public LocalDateTime getTimestamp() {

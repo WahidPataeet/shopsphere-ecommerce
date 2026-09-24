@@ -1,4 +1,4 @@
-package com.shopsphere.product.service;
+package com.shopsphere.product.service.impl;
 
 import com.shopsphere.product.entity.Product;
 import jakarta.persistence.criteria.Predicate;
@@ -23,15 +23,36 @@ public class ProductSpecification {
 
             List<Predicate> predicates = new ArrayList<>();
 
+            // Search by product name OR description
             if (name != null && !name.isBlank()) {
-                predicates.add(
+
+                String searchValue = "%" + name.toLowerCase() + "%";
+
+                Predicate namePredicate =
                         criteriaBuilder.like(
-                                criteriaBuilder.lower(root.get("name")),
-                                "%" + name.toLowerCase() + "%"
+                                criteriaBuilder.lower(
+                                        root.get("name")
+                                ),
+                                searchValue
+                        );
+
+                Predicate descriptionPredicate =
+                        criteriaBuilder.like(
+                                criteriaBuilder.lower(
+                                        root.get("description")
+                                ),
+                                searchValue
+                        );
+
+                predicates.add(
+                        criteriaBuilder.or(
+                                namePredicate,
+                                descriptionPredicate
                         )
                 );
             }
 
+            // Filter by status
             if (status != null && !status.isBlank()) {
                 predicates.add(
                         criteriaBuilder.equal(
@@ -41,6 +62,7 @@ public class ProductSpecification {
                 );
             }
 
+            // Filter by category
             if (categoryId != null) {
                 predicates.add(
                         criteriaBuilder.equal(
@@ -50,6 +72,7 @@ public class ProductSpecification {
                 );
             }
 
+            // Filter by brand
             if (brandId != null) {
                 predicates.add(
                         criteriaBuilder.equal(

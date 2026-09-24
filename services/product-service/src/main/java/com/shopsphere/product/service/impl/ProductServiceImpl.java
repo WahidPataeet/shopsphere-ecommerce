@@ -1,4 +1,4 @@
-package com.shopsphere.product.service;
+package com.shopsphere.product.service.impl;
 
 import com.shopsphere.product.dto.request.CreateProductRequest;
 import com.shopsphere.product.dto.request.UpdateProductRequest;
@@ -12,6 +12,7 @@ import com.shopsphere.product.mapper.ProductMapper;
 import com.shopsphere.product.repository.BrandRepository;
 import com.shopsphere.product.repository.CategoryRepository;
 import com.shopsphere.product.repository.ProductRepository;
+import com.shopsphere.product.service.ProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
