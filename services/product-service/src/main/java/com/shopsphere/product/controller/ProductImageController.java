@@ -3,6 +3,7 @@ package com.shopsphere.product.controller;
 import com.shopsphere.product.dto.response.ProductImageResponse;
 import com.shopsphere.product.service.ProductImageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,9 @@ public class ProductImageController {
                         file
                 );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
     @GetMapping

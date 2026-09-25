@@ -63,20 +63,35 @@ public class ProductImageServiceImpl implements ProductImageService {
 
         s3Service.uploadFile(file, objectKey);
 
-        ProductImage productImage = ProductImage.builder()
-                .product(product)
-                .s3Key(objectKey)
-                .originalFileName(file.getOriginalFilename())
-                .contentType(file.getContentType())
-                .fileSize(file.getSize())
-                .displayOrder(0)
-                .status("ACTIVE")
-                .build();
+        try {
 
-        ProductImage savedImage =
-                productImageRepository.save(productImage);
+            ProductImage productImage = ProductImage.builder()
+                    .product(product)
+                    .s3Key(objectKey)
+                    .originalFileName(file.getOriginalFilename())
+                    .contentType(file.getContentType())
+                    .fileSize(file.getSize())
+                    .displayOrder(0)
+                    .status("ACTIVE")
+                    .build();
 
-        return mapToResponse(savedImage);
+            ProductImage savedImage =
+                    productImageRepository.save(productImage);
+
+            return mapToResponse(savedImage);
+
+        } catch (RuntimeException exception) {
+
+            // Database save failed after S3 upload.
+            // Remove the S3 object to avoid an orphan file.
+            try {
+                s3Service.deleteFile(objectKey);
+            } catch (RuntimeException cleanupException) {
+                exception.addSuppressed(cleanupException);
+            }
+
+            throw exception;
+        }
     }
 
     @Override
@@ -145,17 +160,43 @@ public class ProductImageServiceImpl implements ProductImageService {
                     "Only JPEG, PNG and WebP images are allowed"
             );
         }
+
+        String originalFileName =
+                file.getOriginalFilename();
+
+        if (originalFileName == null ||
+                originalFileName.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Image file name is required"
+            );
+        }
+
+        String extension =
+                getExtension(originalFileName);
+
+        if (!isValidExtension(extension)) {
+            throw new IllegalArgumentException(
+                    "Only .jpg, .jpeg, .png and .webp files are allowed"
+            );
+        }
     }
 
     private String getExtension(String fileName) {
 
-        if (fileName == null || !fileName.contains(".")) {
+        if (fileName == null || fileName.isBlank()) {
             return "";
         }
 
-        return fileName.substring(
-                fileName.lastIndexOf(".")
-        );
+        int lastDotIndex = fileName.lastIndexOf('.');
+
+        if (lastDotIndex < 0 ||
+                lastDotIndex == fileName.length() - 1) {
+            return "";
+        }
+
+        return fileName.substring(lastDotIndex)
+                .toLowerCase();
     }
 
     private ProductImageResponse mapToResponse(
@@ -175,5 +216,13 @@ public class ProductImageServiceImpl implements ProductImageService {
                 )
                 .status(image.getStatus())
                 .build();
+    }
+
+    private boolean isValidExtension(String extension) {
+
+        return extension.equals(".jpg")
+                || extension.equals(".jpeg")
+                || extension.equals(".png")
+                || extension.equals(".webp");
     }
 }
