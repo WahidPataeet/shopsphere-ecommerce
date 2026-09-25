@@ -1,15 +1,18 @@
 package com.shopsphere.product.service.impl;
 
+import com.shopsphere.product.exception.S3OperationException;
 import com.shopsphere.product.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
@@ -34,12 +37,13 @@ public class S3ServiceImpl implements S3Service {
 
         try {
 
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(objectKey)
-                    .contentType(file.getContentType())
-                    .contentLength(file.getSize())
-                    .build();
+            PutObjectRequest request =
+                    PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(objectKey)
+                            .contentType(file.getContentType())
+                            .contentLength(file.getSize())
+                            .build();
 
             s3Client.putObject(
                     request,
@@ -51,9 +55,11 @@ public class S3ServiceImpl implements S3Service {
 
             return objectKey;
 
-        } catch (IOException exception) {
+        } catch (IOException |
+                 S3Exception |
+                 SdkClientException exception) {
 
-            throw new RuntimeException(
+            throw new S3OperationException(
                     "Failed to upload file to S3",
                     exception
             );
@@ -63,13 +69,24 @@ public class S3ServiceImpl implements S3Service {
     @Override
     public void deleteFile(String objectKey) {
 
-        DeleteObjectRequest request =
-                DeleteObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(objectKey)
-                        .build();
+        try {
 
-        s3Client.deleteObject(request);
+            DeleteObjectRequest request =
+                    DeleteObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(objectKey)
+                            .build();
+
+            s3Client.deleteObject(request);
+
+        } catch (S3Exception |
+                 SdkClientException exception) {
+
+            throw new S3OperationException(
+                    "Failed to delete file from S3",
+                    exception
+            );
+        }
     }
 
     @Override
