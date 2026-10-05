@@ -28,27 +28,28 @@ public class JwtService {
         this.expiration = expiration;
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(
+            UserDetails userDetails,
+            Long userId) {
 
         Date now = new Date();
 
-        Date expiry = new Date(
-                now.getTime() + expiration
-        );
+        Date expiry =
+                new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())
-                .issuedAt(now)
-                .expiration(expiry)
+                .claim("userId", userId)
                 .claim(
                         "roles",
                         userDetails.getAuthorities()
                                 .stream()
                                 .map(authority ->
-                                        authority.getAuthority()
-                                )
+                                        authority.getAuthority())
                                 .toList()
                 )
+                .issuedAt(now)
+                .expiration(expiry)
                 .signWith(signingKey)
                 .compact();
     }
