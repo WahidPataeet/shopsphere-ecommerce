@@ -2,6 +2,7 @@ package com.shopsphere.product.service;
 
 import com.shopsphere.product.dto.request.CreateProductRequest;
 import com.shopsphere.product.dto.request.UpdateProductRequest;
+import com.shopsphere.product.dto.response.CartProductValidationResponse;
 import com.shopsphere.product.dto.response.PageResponse;
 import com.shopsphere.product.dto.response.ProductResponse;
 
@@ -27,4 +28,9 @@ public interface ProductService {
     ProductResponse updateProduct(Long id, UpdateProductRequest request);
 
     void deleteProduct(Long id);
+
+    CartProductValidationResponse validateProductForCart(
+            Long productId,
+            Long variantId
+    );
 }

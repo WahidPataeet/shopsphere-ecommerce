@@ -1,5 +1,6 @@
 package com.shopsphere.cart.exception;
 
+import com.shopsphere.cart.cart.client.product.ProductServiceClientException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,6 +60,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(response);
+    }
+
+    @ExceptionHandler(ProductServiceClientException.class)
+    public ResponseEntity<Map<String, Object>>
+    handleProductServiceError(
+            ProductServiceClientException exception) {
+
+        return buildResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage()
+        );
     }
 
     private ResponseEntity<Map<String, Object>> buildResponse(

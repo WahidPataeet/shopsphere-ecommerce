@@ -1,5 +1,7 @@
 package com.shopsphere.cart.cart.service.impl;
 
+import com.shopsphere.cart.cart.client.product.ProductClient;
+import com.shopsphere.cart.cart.client.product.dto.CartProductValidationResponse;
 import com.shopsphere.cart.cart.dto.AddCartItemRequest;
 import com.shopsphere.cart.cart.dto.CartResponse;
 import com.shopsphere.cart.cart.dto.UpdateCartItemRequest;
@@ -24,6 +26,7 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final CartMapper cartMapper;
+    private final ProductClient productClient;
 
     @Override
     @Transactional
@@ -40,11 +43,21 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public CartResponse addItem(
             Long userId,
             AddCartItemRequest request) {
 
-        Cart cart = getOrCreateActiveCart(userId);
+        CartProductValidationResponse product =
+                productClient.validateProductForCart(
+                        request.productId(),
+                        request.variantId()
+                );
+
+        validateProductForCart(product);
+
+        Cart cart =
+                getOrCreateActiveCart(userId);
 
         CartItem existingItem =
                 cartItemRepository
@@ -64,20 +77,23 @@ public class CartServiceImpl implements CartService {
 
         } else {
 
-            CartItem newItem = CartItem.builder()
-                    .cart(cart)
-                    .productId(request.productId())
-                    .variantId(request.variantId())
-                    .quantity(request.quantity())
-                    .build();
+            CartItem newItem =
+                    CartItem.builder()
+                            .cart(cart)
+                            .productId(request.productId())
+                            .variantId(request.variantId())
+                            .quantity(request.quantity())
+                            .build();
 
             cart.addItem(newItem);
         }
 
-        Cart savedCart = cartRepository.save(cart);
+        Cart savedCart =
+                cartRepository.save(cart);
 
         return cartMapper.toResponse(savedCart);
     }
+
 
     @Override
     public CartResponse updateItem(
@@ -172,5 +188,30 @@ public class CartServiceImpl implements CartService {
                 .build();
 
         return cartRepository.save(cart);
+    }
+
+    private void validateProductForCart(
+            CartProductValidationResponse product) {
+
+        if (!product.productActive()) {
+
+            throw new BusinessException(
+                    "Product is not active"
+            );
+        }
+
+        if (!product.variantActive()) {
+
+            throw new BusinessException(
+                    "Product variant is not active"
+            );
+        }
+
+        if (!product.variantBelongsToProduct()) {
+
+            throw new BusinessException(
+                    "Variant does not belong to the selected product"
+            );
+        }
     }
 }
