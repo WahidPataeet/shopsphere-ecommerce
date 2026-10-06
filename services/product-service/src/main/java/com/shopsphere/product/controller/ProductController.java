@@ -2,6 +2,7 @@ package com.shopsphere.product.controller;
 
 import com.shopsphere.product.dto.request.CreateProductRequest;
 import com.shopsphere.product.dto.request.UpdateProductRequest;
+import com.shopsphere.product.dto.response.CartProductValidationResponse;
 import com.shopsphere.product.dto.response.PageResponse;
 import com.shopsphere.product.dto.response.ProductResponse;
 import com.shopsphere.product.service.ProductService;
@@ -9,8 +10,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -96,5 +95,19 @@ public class ProductController {
         productService.deleteProduct(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{productId}/variants/{variantId}/cart-validation")
+    public ResponseEntity<CartProductValidationResponse>
+    validateProductForCart(
+            @PathVariable Long productId,
+            @PathVariable Long variantId) {
+
+        return ResponseEntity.ok(
+                productService.validateProductForCart(
+                        productId,
+                        variantId
+                )
+        );
     }
 }

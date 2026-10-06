@@ -2,16 +2,19 @@ package com.shopsphere.product.service.impl;
 
 import com.shopsphere.product.dto.request.CreateProductRequest;
 import com.shopsphere.product.dto.request.UpdateProductRequest;
+import com.shopsphere.product.dto.response.CartProductValidationResponse;
 import com.shopsphere.product.dto.response.PageResponse;
 import com.shopsphere.product.dto.response.ProductResponse;
 import com.shopsphere.product.entity.Brand;
 import com.shopsphere.product.entity.Category;
 import com.shopsphere.product.entity.Product;
+import com.shopsphere.product.entity.ProductVariant;
 import com.shopsphere.product.exception.ResourceNotFoundException;
 import com.shopsphere.product.mapper.ProductMapper;
 import com.shopsphere.product.repository.BrandRepository;
 import com.shopsphere.product.repository.CategoryRepository;
 import com.shopsphere.product.repository.ProductRepository;
+import com.shopsphere.product.repository.ProductVariantRepository;
 import com.shopsphere.product.service.ProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,12 +33,14 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
     private final ProductMapper productMapper;
+    private final ProductVariantRepository productVariantRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, BrandRepository brandRepository, ProductMapper productMapper) {
+    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, BrandRepository brandRepository, ProductMapper productMapper, ProductVariantRepository productVariantRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.brandRepository = brandRepository;
         this.productMapper = productMapper;
+        this.productVariantRepository = productVariantRepository;
     }
 
     @Override
@@ -163,5 +168,45 @@ public class ProductServiceImpl implements ProductService {
                                 "Product not found: " + id));
 
         productRepository.delete(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CartProductValidationResponse validateProductForCart(
+            Long productId,
+            Long variantId) {
+
+        Product product = productRepository
+                .findById(productId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Product not found with id: " + productId
+                        )
+                );
+
+        ProductVariant variant = productVariantRepository
+                .findById(variantId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Variant not found with id: " + variantId
+                        )
+                );
+
+        boolean productActive =
+                "ACTIVE".equals(product.getStatus());
+
+        boolean variantActive =
+                "ACTIVE".equals(variant.getStatus());
+
+        boolean variantBelongsToProduct =
+                variant.getProduct().getId().equals(productId);
+
+        return new CartProductValidationResponse(
+                product.getId(),
+                variant.getId(),
+                productActive,
+                variantActive,
+                variantBelongsToProduct
+        );
     }
 }
