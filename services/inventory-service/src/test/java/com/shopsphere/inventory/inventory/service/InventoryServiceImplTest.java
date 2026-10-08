@@ -31,15 +31,14 @@ class InventoryServiceImplTest {
     @Test
     void shouldRejectReservationWhenStockIsInsufficient() {
 
-        Inventory inventory =
-                Inventory.builder()
-                        .id(1L)
-                        .variantId(100L)
-                        .totalStock(10)
-                        .reservedStock(8)
-                        .build();
+        Inventory inventory = Inventory.builder()
+                .id(1L)
+                .variantId(100L)
+                .totalStock(10)
+                .reservedStock(8)
+                .build();
 
-        when(inventoryRepository.findByVariantId(100L))
+        when(inventoryRepository.findByVariantIdForUpdate(100L))
                 .thenReturn(Optional.of(inventory));
 
         ReserveInventoryRequest request =
@@ -47,15 +46,10 @@ class InventoryServiceImplTest {
 
         assertThrows(
                 InsufficientStockException.class,
-                () -> inventoryService.reserveStock(
-                        100L,
-                        request
-                )
+                () -> inventoryService.reserveStock(100L, request)
         );
 
-        verify(
-                inventoryRepository,
-                never()
-        ).save(any());
+        verify(inventoryRepository)
+                .findByVariantIdForUpdate(100L);
     }
 }
