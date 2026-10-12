@@ -127,4 +127,9 @@ public class Order {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    public void changeStatus(OrderStatus newStatus) {
+        this.status = newStatus;
+    }
+
 }
