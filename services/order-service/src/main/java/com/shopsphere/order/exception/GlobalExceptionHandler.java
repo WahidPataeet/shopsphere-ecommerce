@@ -58,4 +58,18 @@ public class GlobalExceptionHandler {
                         "message", exception.getMessage()
                 ));
     }
+
+    @ExceptionHandler(InvalidOrderStatusTransitionException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidOrderStatusTransition(
+            InvalidOrderStatusTransitionException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of(
+                        "timestamp", LocalDateTime.now().toString(),
+                        "status", HttpStatus.CONFLICT.value(),
+                        "error", "Conflict",
+                        "message", exception.getMessage()
+                ));
+    }
+
 }

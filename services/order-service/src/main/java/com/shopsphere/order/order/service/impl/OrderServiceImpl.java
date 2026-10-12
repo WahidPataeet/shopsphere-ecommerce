@@ -1,6 +1,9 @@
 package com.shopsphere.order.order.service.impl;
 
+import com.shopsphere.order.exception.InvalidOrderStatusTransitionException;
 import com.shopsphere.order.exception.ResourceNotFoundException;
+import com.shopsphere.order.history.entity.OrderStatusHistory;
+import com.shopsphere.order.history.repository.OrderStatusHistoryRepository;
 import com.shopsphere.order.order.dto.request.CreateOrderItemRequest;
 import com.shopsphere.order.order.dto.request.CreateOrderRequest;
 import com.shopsphere.order.order.dto.response.OrderItemResponse;
@@ -23,6 +26,7 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     @Override
     public OrderResponse createOrder(CreateOrderRequest request) {
@@ -122,6 +126,68 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public OrderResponse transitionStatus(
+            Long orderId,
+            OrderStatus targetStatus,
+            String changedBy,
+            String reason
+    ) {
+        if (targetStatus == null) {
+            throw new IllegalArgumentException(
+                    "Target order status is required"
+            );
+        }
+
+        if (changedBy == null || changedBy.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Actor identifier is required"
+            );
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Order not found with id: " + orderId
+                        )
+                );
+
+        OrderStatus currentStatus = order.getStatus();
+
+        if (!currentStatus.canTransitionTo(targetStatus)) {
+            throw new InvalidOrderStatusTransitionException(
+                    "Cannot transition order from "
+                            + currentStatus + " to " + targetStatus
+            );
+        }
+
+        order.changeStatus(targetStatus);
+
+        orderStatusHistoryRepository.save(
+                new OrderStatusHistory(
+                        order.getId(),
+                        currentStatus,
+                        targetStatus,
+                        changedBy.trim(),
+                        reason == null || reason.isBlank()
+                                ? null
+                                : reason.trim()
+                )
+        );
+
+        Order savedOrder = orderRepository.save(order);
+
+        return toResponse(savedOrder);
+    }
+
+    private String normalizeOptional(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
     private OrderResponse toResponse(Order order) {
 
         List<OrderItemResponse> itemResponses = order.getItems()
@@ -162,10 +228,4 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
-    private String normalizeOptional(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return value.trim();
-    }
 }
