@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,6 +44,7 @@ public class Payment {
     @Column(nullable = false, length = 50)
     private String provider;
 
+    @Setter
     @Column(name = "provider_payment_id", length = 150)
     private String providerPaymentId;
 
