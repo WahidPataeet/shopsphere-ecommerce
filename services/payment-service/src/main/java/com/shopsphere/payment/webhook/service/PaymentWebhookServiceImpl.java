@@ -39,11 +39,6 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         String normalizedProvider = provider.toUpperCase(Locale.ROOT);
 
-        if (eventRepository.existsByProviderAndProviderEventId(
-                normalizedProvider, request.eventId())) {
-            return duplicateResponse(request.eventId());
-        }
-
         String payloadHash = sha256(rawBody);
 
         var existingEvent = eventRepository
