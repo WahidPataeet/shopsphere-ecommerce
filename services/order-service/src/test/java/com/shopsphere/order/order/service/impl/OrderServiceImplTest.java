@@ -1,17 +1,20 @@
 package com.shopsphere.order.order.service.impl;
 
-
+import com.shopsphere.order.event.OrderCreatedEvent;
 import com.shopsphere.order.order.dto.request.CreateOrderItemRequest;
 import com.shopsphere.order.order.dto.request.CreateOrderRequest;
 import com.shopsphere.order.order.dto.response.OrderResponse;
 import com.shopsphere.order.order.entity.Order;
 import com.shopsphere.order.order.entity.OrderStatus;
 import com.shopsphere.order.order.repository.OrderRepository;
+import com.shopsphere.order.history.repository.OrderStatusHistoryRepository;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,6 +28,12 @@ class OrderServiceImplTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private OrderStatusHistoryRepository orderStatusHistoryRepository;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -75,10 +84,15 @@ class OrderServiceImplTest {
         assertEquals(new BigDecimal("950.00"), response.totalAmount());
 
         assertEquals(1, response.items().size());
-        assertEquals(new BigDecimal("1000.00"),
-                response.items().get(0).lineTotal());
+        assertEquals(
+                new BigDecimal("1000.00"),
+                response.items().get(0).lineTotal()
+        );
 
         verify(orderRepository).save(any(Order.class));
+
+        verify(applicationEventPublisher)
+                .publishEvent(any(OrderCreatedEvent.class));
     }
 
     @Test
@@ -116,5 +130,7 @@ class OrderServiceImplTest {
         );
 
         verify(orderRepository, never()).save(any(Order.class));
+
+        verifyNoInteractions(applicationEventPublisher);
     }
 }

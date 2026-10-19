@@ -20,6 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.shopsphere.order.event.OrderCreatedEvent;
+import org.springframework.context.ApplicationEventPublisher;
+
+import java.time.Instant;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,6 +33,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     public OrderResponse createOrder(CreateOrderRequest request) {
@@ -85,6 +92,21 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order savedOrder = orderRepository.save(order);
+
+        OrderCreatedEvent event = new OrderCreatedEvent(
+            UUID.randomUUID().toString(),
+                "ORDER_CREATED",
+                1,
+                Instant.now(),
+                savedOrder.getId(),
+                savedOrder.getOrderNumber(),
+                savedOrder.getUserId(),
+                savedOrder.getCurrency(),
+                savedOrder.getTotalAmount(),
+                savedOrder.getItems().size()
+        );
+
+        applicationEventPublisher.publishEvent(event);
 
         return toResponse(savedOrder);
     }
