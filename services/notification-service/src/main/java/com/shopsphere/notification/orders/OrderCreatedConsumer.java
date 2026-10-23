@@ -21,7 +21,8 @@ public class OrderCreatedConsumer {
 
     @KafkaListener(
             topics = "${shopsphere.kafka.topics.orders}",
-            groupId = "${shopsphere.kafka.consumer.order-group-id}"
+            groupId = "${shopsphere.kafka.consumer.order-group-id}",
+            containerFactory = "orderEventsKafkaListenerContainerFactory"
     )
     public void consume(String message) {
         final OrderCreatedEvent event;
